@@ -21,7 +21,6 @@ namespace UnitTest.AvailabilityServiceTest
             var availability = new Availability
             {
                 AvailabilityID = availabilityId
-
             };
 
             mockGetServices
@@ -44,4 +43,6 @@ namespace UnitTest.AvailabilityServiceTest
                 "El método DeleteAvailability debe llamarse exactamente una vez con la disponibilidad obtenida.");
         }
     }
+
+
 }
