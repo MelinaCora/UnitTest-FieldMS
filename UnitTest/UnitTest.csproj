@@ -33,9 +33,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="AvailabilityServiceTest\" />
     <Folder Include="FieldServiceTest\" />
     <Folder Include="FieldTypeServiceTest\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Application\Application.csproj" />
   </ItemGroup>
 
 </Project>
