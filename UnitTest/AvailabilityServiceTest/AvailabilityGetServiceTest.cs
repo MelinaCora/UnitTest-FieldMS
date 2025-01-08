@@ -51,7 +51,7 @@ namespace UnitTest.AvailabilityServiceTest
 
             mockQuery
                 .Setup(q => q.GetAvailabilityByID(availabilityId))
-                .ReturnsAsync((Availability)null); // Devuelve null para simular que no se encontró
+                .ReturnsAsync((Availability)null);
 
             var service = new AvailabilityGetServices(mockQuery.Object, mockMapper.Object);
 
