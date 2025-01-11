@@ -172,8 +172,7 @@ namespace UnitTest.FieldServiceTest
             // ASSERT
             Assert.NotNull(result);
             Assert.Empty(result);
-
-            // Verificaciones de los mocks
+            
             mockValidator.Verify(v => v.Validate(It.IsAny<GetFieldsRequest>()), Times.Once);
             mockQuery.Verify(q => q.GetFields(name, sizeoffield, type, availability, offset, size), Times.Once);
         }
