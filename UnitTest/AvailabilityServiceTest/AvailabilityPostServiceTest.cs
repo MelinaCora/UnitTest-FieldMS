@@ -26,6 +26,7 @@ namespace UnitTest.AvailabilityServiceTest
             var mockValidator = new Mock<IValidatorHandler<AvailabilityRequest>>();
 
             var fieldId = Guid.NewGuid();
+
             var request = new AvailabilityRequest
             {
                 Day = "Monday",
