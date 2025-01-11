@@ -62,5 +62,120 @@ namespace UnitTest.FieldServiceTest
             mockQuery.Verify(q => q.GetFieldById(fieldID), Times.Once);
             mockMapper.Verify(m => m.Map<FieldResponse>(existingField), Times.Once);
         }
+
+        [Fact]
+        public async Task GetAllFields_Should_Return_Fields_When_Found()
+        {
+            // ARRANGE
+            var mockQuery = new Mock<IFieldQuery>();
+            var mockValidator = new Mock<IValidatorHandler<GetFieldsRequest>>();
+            var mockMapper = new Mock<IMapper>();
+            
+            string? name = "Test Field";
+            string? sizeoffield = "Medium";
+            int? type = 1;
+            int? availability = 5;
+            int? offset = 0;
+            int? size = 10;
+            
+            var fields = new List<Field>
+            {
+                new Field
+                {
+                    FieldID = Guid.NewGuid(),
+                    Name = "Field 1",
+                    Size = "Small",
+                    FieldTypeID = 1,
+                },
+
+                new Field
+                {
+                    FieldID = Guid.NewGuid(),
+                    Name = "Field 2",
+                    Size = "Large",
+                    FieldTypeID = 2,
+                    
+                }
+            };
+           
+            var fieldResponses = fields.Select(field => new FieldResponse
+            {
+                Id = field.FieldID,
+                Name = field.Name,
+                Size = field.Size,
+                FieldType = new FieldTypeResponse { 
+                    Id= field.FieldTypeID,
+                },
+            }).ToList();
+            
+            mockValidator
+                .Setup(v => v.Validate(It.IsAny<GetFieldsRequest>()))
+                .Returns(Task.CompletedTask);
+            
+            mockQuery
+                .Setup(q => q.GetFields(name, sizeoffield, type, availability, offset, size))
+                .ReturnsAsync(fields);
+            
+            mockMapper
+                .Setup(m => m.Map<List<FieldResponse>>(fields))
+                .Returns(fieldResponses);
+            
+            var fieldGetService = new FieldGetServices(mockQuery.Object, mockValidator.Object, mockMapper.Object);
+
+            // ACT
+            var result = await fieldGetService.GetAllFields(name, sizeoffield, type, availability, offset, size);
+
+            // ASSERT
+            Assert.NotNull(result);
+            Assert.Equal(fields.Count, result.Count); 
+            for (int i = 0; i < fields.Count; i++)
+            {
+                Assert.Equal(fields[i].FieldID, result[i].Id);
+                Assert.Equal(fields[i].Name, result[i].Name);
+                Assert.Equal(fields[i].Size, result[i].Size);
+                Assert.Equal(fields[i].FieldTypeID, result[i].FieldType.Id);                
+            }
+            
+            mockValidator.Verify(v => v.Validate(It.IsAny<GetFieldsRequest>()), Times.Once);
+            mockQuery.Verify(q => q.GetFields(name, sizeoffield, type, availability, offset, size), Times.Once);
+            mockMapper.Verify(m => m.Map<List<FieldResponse>>(fields), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetAllFields_Should_Return_Empty_List_When_No_Fields_Found()
+        {
+            // ARRANGE
+            var mockQuery = new Mock<IFieldQuery>();
+            var mockValidator = new Mock<IValidatorHandler<GetFieldsRequest>>();
+            var mockMapper = new Mock<IMapper>();
+
+            string? name = null;
+            string? sizeoffield = null;
+            int? type = null;
+            int? availability = null;
+            int? offset = 0;
+            int? size = 10;
+
+            mockValidator
+               .Setup(v => v.Validate(It.IsAny<GetFieldsRequest>()))
+               .Returns(Task.CompletedTask);
+
+            mockQuery
+               .Setup(q => q.GetFields(name, sizeoffield, type, availability, offset, size))
+               .ReturnsAsync(new List<Field>());
+
+           var fieldGetService = new FieldGetServices(mockQuery.Object, mockValidator.Object, mockMapper.Object);
+
+            // ACT
+            var result = await fieldGetService.GetAllFields(name, sizeoffield, type, availability, offset, size);
+
+            // ASSERT
+            Assert.NotNull(result);
+            Assert.Empty(result);
+
+            // Verificaciones de los mocks
+            mockValidator.Verify(v => v.Validate(It.IsAny<GetFieldsRequest>()), Times.Once);
+            mockQuery.Verify(q => q.GetFields(name, sizeoffield, type, availability, offset, size), Times.Once);
+        }
     }
 }
