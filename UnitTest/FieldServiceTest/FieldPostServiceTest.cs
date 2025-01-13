@@ -14,6 +14,8 @@ using Application.Services.FieldServices;
 using Application.DTOS.Request;
 using Domain.Entities;
 using Application.DTOS.Responses;
+using Application.Exceptions;
+using FluentValidation;
 
 
 namespace UnitTest.FieldServiceTest
@@ -102,6 +104,127 @@ namespace UnitTest.FieldServiceTest
             mockMapper.Verify(m => m.Map<Field>(request), Times.Once);
             mockMapper.Verify(m => m.Map<FieldResponse>(newField), Times.Once);
             mockFieldCommand.Verify(c => c.InsertField(It.IsAny<Field>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task CreateField_Should_Throw_NotFoundException_When_FieldType_NotFound()
+        {
+            // ARRANGE
+            var mockFieldTypeQuery = new Mock<IFieldTypeQuery>();
+            var mockValidator = new Mock<IValidatorHandler<FieldRequest>>();
+            var mockMapper = new Mock<IMapper>();
+            var mockFieldCommand = new Mock<IFieldCommand>();
+
+            var request = new FieldRequest
+            {
+                Name = "Test Field",
+                Size = "Large",
+                FieldType = 999
+            };
+
+            mockValidator.Setup(v => v.Validate(It.IsAny<FieldRequest>()))
+                .Returns(Task.CompletedTask);
+
+            mockFieldTypeQuery.Setup(q => q.GetFieldTypeById(request.FieldType))
+                .ReturnsAsync((FieldType)null);
+
+            var service = new FieldPostServices(mockFieldCommand.Object, null, mockFieldTypeQuery.Object, null, mockValidator.Object, mockMapper.Object);
+
+            // ACT & ASSERT
+            await Assert.ThrowsAsync<NotFoundException>(() => service.CreateField(request));
+
+            mockFieldTypeQuery.Verify(q => q.GetFieldTypeById(request.FieldType), Times.Once);
+            mockFieldCommand.Verify(c => c.InsertField(It.IsAny<Field>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task CreateField_Should_Throw_ValidationException_When_Name_Is_Null()
+        {
+            // ARRANGE
+            var mockValidator = new Mock<IValidatorHandler<FieldRequest>>();
+            var request = new FieldRequest
+            {
+                Name = null,
+                Size = "5",
+                FieldType = 1
+            };
+
+            mockValidator
+                .Setup(v => v.Validate(It.IsAny<FieldRequest>()))
+                .Throws(new ValidationException("The name is required."));
+
+            var service = new FieldPostServices(
+                Mock.Of<IFieldCommand>(),
+                Mock.Of<IFieldQuery>(),
+                Mock.Of<IFieldTypeQuery>(),
+                Mock.Of<IAvailabilityQuery>(),
+                mockValidator.Object,
+                Mock.Of<IMapper>());
+
+            // ACT & ASSERT
+            var exception = await Assert.ThrowsAsync<ValidationException>(() => service.CreateField(request));
+            Assert.Equal("The name is required.", exception.Message);
+            mockValidator.Verify(v => v.Validate(It.IsAny<FieldRequest>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task CreateField_Should_Throw_ValidationException_When_Size_Is_Null()
+        {
+            // ARRANGE
+            var mockValidator = new Mock<IValidatorHandler<FieldRequest>>();
+            var request = new FieldRequest
+            {
+                Name = "Test Field",
+                Size = null,
+                FieldType = 1
+            };
+
+            mockValidator
+                .Setup(v => v.Validate(It.IsAny<FieldRequest>()))
+                .Throws(new ValidationException("The size is required."));
+
+            var service = new FieldPostServices(
+                Mock.Of<IFieldCommand>(),
+                Mock.Of<IFieldQuery>(),
+                Mock.Of<IFieldTypeQuery>(),
+                Mock.Of<IAvailabilityQuery>(),
+                mockValidator.Object,
+                Mock.Of<IMapper>());
+
+            // ACT & ASSERT
+            var exception = await Assert.ThrowsAsync<ValidationException>(() => service.CreateField(request));
+            Assert.Equal("The size is required.", exception.Message);
+            mockValidator.Verify(v => v.Validate(It.IsAny<FieldRequest>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task CreateField_Should_Throw_ValidationException_When_Size_Is_Invalid()
+        {
+            // ARRANGE
+            var mockValidator = new Mock<IValidatorHandler<FieldRequest>>();
+            var request = new FieldRequest
+            {
+                Name = "Test Field",
+                Size = "20",
+                FieldType = 1
+            };
+
+            mockValidator
+                .Setup(v => v.Validate(It.IsAny<FieldRequest>()))
+                .Throws(new ValidationException("The size must be either 5, 7, or 11."));
+
+            var service = new FieldPostServices(
+                Mock.Of<IFieldCommand>(),
+                Mock.Of<IFieldQuery>(),
+                Mock.Of<IFieldTypeQuery>(),
+                Mock.Of<IAvailabilityQuery>(),
+                mockValidator.Object,
+                Mock.Of<IMapper>());
+
+            // ACT & ASSERT
+            var exception = await Assert.ThrowsAsync<ValidationException>(() => service.CreateField(request));
+            Assert.Equal("The size must be either 5, 7, or 11.", exception.Message);
+            mockValidator.Verify(v => v.Validate(It.IsAny<FieldRequest>()), Times.Once);
         }
     }
 }
