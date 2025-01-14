@@ -14,6 +14,7 @@ using Application.DTOS.Responses;
 using FluentAssertions.Equivalency;
 using Field = Domain.Entities.Field;
 using Application.Services.FieldServices;
+using Application.Exceptions;
 
 namespace UnitTest.FieldServiceTest
 {
@@ -61,6 +62,28 @@ namespace UnitTest.FieldServiceTest
 
             mockQuery.Verify(q => q.GetFieldById(fieldID), Times.Once);
             mockMapper.Verify(m => m.Map<FieldResponse>(existingField), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetFieldById_Should_Throw_NotFoundException_When_Field_Not_Found()
+        {
+            // ARRANGE
+            var mockQuery = new Mock<IFieldQuery>();
+            var mockValidator = new Mock<IValidatorHandler<GetFieldsRequest>>();
+            var mockMapper = new Mock<IMapper>();
+
+            var fieldID = Guid.NewGuid();
+
+            mockQuery
+                .Setup(q => q.GetFieldById(fieldID))
+                .ReturnsAsync((Field)null);
+
+            var fieldGetService = new FieldGetServices(mockQuery.Object, mockValidator.Object, mockMapper.Object);
+
+            // ACT & ASSERT
+            await Assert.ThrowsAsync<NotFoundException>(() => fieldGetService.GetFieldById(fieldID));
+
+            mockQuery.Verify(q => q.GetFieldById(fieldID), Times.Once);
         }
 
         [Fact]

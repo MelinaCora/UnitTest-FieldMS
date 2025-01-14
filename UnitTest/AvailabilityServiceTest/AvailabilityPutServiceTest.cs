@@ -104,5 +104,34 @@ namespace UnitTest.AvailabilityServiceTest
             mockQuery.Verify(q => q.GetAvailabilityByID(availabilityId), Times.Once, "Debe buscarse la disponibilidad por ID exactamente una vez.");
             mockCommand.Verify(c => c.UpdateAvailability(It.IsAny<Availability>()), Times.Once, "Debe actualizarse la disponibilidad exactamente una vez.");
         }
+
+        [Fact]
+        public async Task UpdateAvailability_Should_Throw_Exception_When_Validation_Fails()
+        {
+            // Arrange
+            var mockQuery = new Mock<IAvailabilityQuery>();
+            var mockCommand = new Mock<IAvailabilityCommand>();
+            var mockValidator = new Mock<IValidatorHandler<AvailabilityRequest>>();
+            var mockMapper = new Mock<IMapper>();
+
+            int validId = 1;
+
+            var request = new AvailabilityRequest
+            {
+                Day = "InvalidDay",
+                OpenHour = TimeSpan.FromHours(8),
+                CloseHour = TimeSpan.FromHours(18)
+            };
+
+            mockValidator
+                .Setup(v => v.Validate(request))
+                .ThrowsAsync(new ArgumentException("Validation failed"));
+
+            var service = new AvailabilityPutServices(mockMapper.Object, mockCommand.Object, mockQuery.Object, mockValidator.Object);
+
+            // Act & Assert
+            await Assert.ThrowsAsync<ArgumentException>(() => service.UpdateAvailability(validId, request));
+            mockValidator.Verify(v => v.Validate(request), Times.Once);
+        }
     }
 }
