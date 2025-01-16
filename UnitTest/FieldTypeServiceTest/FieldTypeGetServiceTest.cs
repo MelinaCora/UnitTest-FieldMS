@@ -18,6 +18,7 @@ using Application.DTOS.Responses;
 using Domain.Entities;
 using Microsoft.VisualBasic.FileIO;
 using FieldType = Domain.Entities.FieldType;
+using Application.Exceptions;
 
 namespace UnitTest.FieldTypeServiceTest
 {
@@ -99,6 +100,51 @@ namespace UnitTest.FieldTypeServiceTest
             Assert.NotNull(result);
             Assert.IsType<FieldTypeResponse>(result);
             Assert.Equal(fieldTypeID, result.Id);
+        }
+
+        [Fact]
+        public async Task GetFieldTypeById_ShouldThrowNotFoundException_WhenFieldTypeDoesNotExist()
+        {
+            // ARRANGE
+            var mockFieldTypeQuery = new Mock<IFieldTypeQuery>();
+            var mockMapper = new Mock<IMapper>();
+
+            var invalidId = 99;
+
+            mockFieldTypeQuery
+                .Setup(f => f.GetFieldTypeById(invalidId))
+                .ReturnsAsync((FieldType)null);
+
+            var service = new FieldTypeGetServices(mockFieldTypeQuery.Object, mockMapper.Object);
+
+            // ACT & ASSERT
+            await Assert.ThrowsAsync<NotFoundException>(() => service.GetFieldTypeById(invalidId));
+        }
+
+        [Fact]
+        public async Task GetAll_ShouldReturnEmptyList_WhenNoFieldTypesExist()
+        {
+            // ARRANGE
+            var mockFieldTypeQuery = new Mock<IFieldTypeQuery>();
+            var mockMapper = new Mock<IMapper>();
+
+            mockFieldTypeQuery
+                .Setup(q => q.GetListFieldTypes())
+                .ReturnsAsync(new List<FieldType>());
+
+            mockMapper
+                .Setup(m => m.Map<List<FieldTypeResponse>>(It.IsAny<List<FieldType>>()))
+                .Returns(new List<FieldTypeResponse>());
+
+            var service = new FieldTypeGetServices(mockFieldTypeQuery.Object, mockMapper.Object);
+
+            // ACT
+            var result = await service.GetAll();
+
+            // ASSERT
+            Assert.NotNull(result);
+            Assert.IsType<List<FieldTypeResponse>>(result);
+            Assert.Empty(result);
         }
     }
 }
