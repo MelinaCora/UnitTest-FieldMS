@@ -55,8 +55,11 @@ namespace UnitTest.AvailabilityServiceTest
 
             var service = new AvailabilityGetServices(mockQuery.Object, mockMapper.Object);
 
-            // ACT & ASSERT
+            // ACT 
             var exception = await Assert.ThrowsAsync<NotFoundException>(() => service.GetAvailabilityById(availabilityId));
+
+            // ASSERT
+
             Assert.Equal("Availability not found", exception.Message);
 
             mockQuery.Verify(q => q.GetAvailabilityByID(availabilityId),

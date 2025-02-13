@@ -67,10 +67,11 @@ namespace UnitTest.AvailabilityServiceTest
 
             var service = new AvailabilityDeleteService(mockCommand.Object, mockGetServices.Object);
 
-            // ACT & ASSERT
+            // ACT 
             var exception = await Assert.ThrowsAsync<Exception>(() => service.DeleteAvailability(availabilityId));
+            
+            // ASSERT            
             Assert.Equal("Error al eliminar la disponibilidad.", exception.Message);
-
             mockGetServices.Verify(s => s.GetAvailabilityById(availabilityId), Times.Once);
             mockCommand.Verify(c => c.DeleteAvailability(availability), Times.Once);
         }

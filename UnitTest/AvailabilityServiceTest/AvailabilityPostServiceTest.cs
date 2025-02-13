@@ -107,10 +107,11 @@ namespace UnitTest.AvailabilityServiceTest
 
             var service = new AvailabilityPostServices(mockMapper.Object, mockCommand.Object, mockValidator.Object);
 
-            // ACT & ASSERT
+            // ACT 
             var exception = await Assert.ThrowsAsync<Exception>(() => service.CreateAvailability(fieldId, request));
-            Assert.Equal("Validation failed.", exception.Message);
-            
+
+            //ASSERT
+            Assert.Equal("Validation failed.", exception.Message);            
             mockCommand.Verify(c => c.InsertAvailability(It.IsAny<Availability>()), Times.Never);
             mockMapper.Verify(m => m.Map<Availability>(It.IsAny<AvailabilityRequest>()), Times.Never);
         }
@@ -153,10 +154,11 @@ namespace UnitTest.AvailabilityServiceTest
 
             var service = new AvailabilityPostServices(mockMapper.Object, mockCommand.Object, mockValidator.Object);
 
-            // ACT & ASSERT
+            // ACT
             var exception = await Assert.ThrowsAsync<Exception>(() => service.CreateAvailability(fieldId, request));
-            Assert.Equal("Database error.", exception.Message);
 
+            //ASSERT
+            Assert.Equal("Database error.", exception.Message);
             mockValidator.Verify(v => v.Validate(request), Times.Once);
             mockMapper.Verify(m => m.Map<Availability>(request), Times.Once);
         }
