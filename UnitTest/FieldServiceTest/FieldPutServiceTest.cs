@@ -31,8 +31,7 @@ namespace UnitTest.FieldServiceTest
         private readonly FieldPutServices _fieldPutServices;
 
         public FieldPutServiceTest()
-        {
-            // Inicialización de mocks
+        {            
             _mockFieldCommand = new Mock<IFieldCommand>();
             _mockFieldQuery = new Mock<IFieldQuery>();
             _mockFieldTypeQuery = new Mock<IFieldTypeQuery>();
@@ -42,8 +41,7 @@ namespace UnitTest.FieldServiceTest
             _mockAvailabilityDeleteService = new Mock<IAvailabilityDeleteService>();
             _mockFieldValidator = new Mock<IValidatorHandler<FieldRequest>>();
             _mockMapper = new Mock<IMapper>();
-
-            // Inicialización del servicio a probar
+            
             _fieldPutServices = new FieldPutServices(
                 _mockFieldCommand.Object,
                 _mockFieldQuery.Object,
